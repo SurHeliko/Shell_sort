@@ -1,86 +1,97 @@
 #define _CRT_SECURE_NO_WARNINGS
+#define _CRTDBG_MAP_ALLOC
+#include "mainFunctions.h"
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <Windows.h>
 
-void shellSort(int* arr, int cntEl);
-int createFile(const char* fileName, int sizeArray);
-int* readFile(const char* fileName);
+void main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
 
+    printf("Выберите действие:\n");
+    printf("1: Ввод массива вручную.\n");
+    printf("2: Считать массив из файла ввода input.txt.\n");
+    printf("3: Создать файл с массивом случайных чисел.\n");
 
-int main() {
-    srand(time(NULL)); // РїСЂРёРІСЏР·РєР° СЂР°РЅРґРѕРјР° Рє РІСЂРµРјРµРЅРё
+    char operation = getchar();
+    getchar();
 
-    int sizeArray = 10;
+    switch (operation)
+    {
+    case '1': {
+        printf("Введите массив чисел через пробел:\n");
+        int currentCount = 0, sizeArray = 10;
+        int *arrayNum = malloc(sizeArray * sizeof(int));
+        char c;
 
-    createFile("file.txt", sizeArray); // СЃРѕР·РґР°РЅРёРµ С„Р°Р№Р»Р° СЃ СЂР°РЅРґРѕРјРЅС‹РјРё С‡РёСЃР»Р°РјРё
-
-    int* arrayNum = readFile("file.txt"); // С‡С‚РµРЅРёРµ С„Р°Р№Р»Р° Рё Р·Р°РґР°РЅРёРµ РјР°СЃСЃРёРІР°
-    if (arrayNum == NULL) {
-        printf("ERROR: array reading error");
-        return 1;
-    }
-
-    time_t startTime = time(NULL); // РЅР°С‡Р°Р»СЊРЅРѕРµ РІСЂРµРјСЏ
-    shellSort(arrayNum, sizeArray); // СЃРѕСЂС‚РёСЂРѕРІРєР° РјР°СЃСЃРёРІР°
-    time_t endTime = time(NULL); // РєРѕРЅРµС‡РЅРѕРµ РІСЂРµРјСЏ
-
-    time_t totalTime = startTime - endTime; // РѕР±С‰РµРµ РІСЂРµРјСЏ СЃРѕСЂС‚РёСЂРѕРІРєРё
-    printf("Sorted array:\n");
-    for (int i = 0; i < sizeArray; i++) printf("%d ", arrayNum[i]); // РІС‹РІРѕРґ РјР°СЃСЃРёРІР°
-    printf("\nSorting time: %d\n", totalTime);
-
-    return 0;
-}
-
-void shellSort(int* arr, int cntEl) {
-    for (int step = cntEl / 2; step > 0; step /= 2) // shell СЃРѕСЂС‚РёСЂРѕРІРєР° СЃ С€Р°РіРѕРј РІ РїРѕР»РѕРІРёРЅСѓ СЌР»РµРјРµРЅС‚РѕРІ
-    for (int i = step; i < cntEl; i++) {
-        int temp = arr[i];
-        int k;
-        for (k = i; k >= step && arr[k - step] > temp; k -= step) {
-            arr[k] = arr[k - step];
+        while (scanf("%d%c", &arrayNum[currentCount++], &c) == 2) {
+            if (currentCount >= sizeArray) {
+                sizeArray *= 2;
+                arrayNum = realloc(arrayNum, sizeArray * sizeof(int));
+            }
+            if (c == '\n') break;
         }
-        arr[k] = temp;
-    }
-}
+        arrayNum = realloc(arrayNum, --currentCount * sizeof(int));
 
+        time_t startTime = clock();; // начальное время
+        shellSort(arrayNum, currentCount); // сортировка массива
+        time_t endTime = clock();; // конечное время
 
-int createFile(const char* fileName, int sizeArray) {
-    FILE* file = fopen(fileName, "w"); // РѕС‚РєСЂС‹С‚РёРµ С„Р°Р№Р»Р°
-    if (file == NULL) {
-        printf("\nERROR: file creation error\n");
-        fclose(file);
-        return 1;
-    }
+        outputFile(arrayNum, currentCount);
+        printf("Отсортированный массив сохранён в файл output.txt");
 
-    for (int i = 0; i < sizeArray; i++) fprintf(file, "%d\n", rand() % 100 - 50); // Р·Р°РїРѕР»РЅРµРЅРёРµ С„Р°Р№Р»Р°
+        double totalTime = (double)(endTime - startTime) / CLOCKS_PER_SEC; // общее время сортировки
+        printf("\nВремя сортировки: %.3f\n", totalTime);
 
-    fclose(file); // Р·Р°РєСЂС‹С‚РёРµ С„Р°Р№Р»Р°
+        free(arrayNum);
 
-    return 0;
-}
-
-
-int* readFile(const char* fileName) {
-    FILE* file = fopen(fileName, "r");// РѕС‚РєСЂС‹С‚РёРµ С„Р°Р№Р»Р°
-    if (file == NULL) {
-        printf("\nERROR: file reading error\n");
-        fclose(file);
-        return NULL;
+        break;
     }
 
-    int count = 0;
-    int* numbers = malloc(count * sizeof(int));
-    int num;
+    case '2': {
+        int sizeArr = NULL;
+        int* arrayNum = readFile(&sizeArr);
+        if (arrayNum != NULL) {
+            time_t startTime = clock();; // начальное время
+            shellSort(arrayNum, sizeArr); // сортировка массива
+            time_t endTime = clock();; // конечное время
 
+            outputFile(arrayNum, sizeArr);
+            printf("Отсортированный массив сохранён в файл output.txt");
 
-    while (fscanf(file, "%d", &num) == 1) {// СЃ РєР°Р¶РґС‹Рј СЃС‡РёС‚Р°РЅРЅС‹Рј СЌР»РµРјРµРЅС‚РѕРј СЂР°Р·РјРµСЂ РјР°СЃСЃРёРІР° РїРµСЂРµР·Р°РґР°С‘С‚СЃСЏ (РїРµСЂРµРґРµР»Р°СЋ)
-        numbers = realloc(numbers, ++count * sizeof(int));
-        numbers[count - 1] = num;
+            double totalTime = (double)(endTime - startTime) / CLOCKS_PER_SEC; // общее время сортировки
+            printf("\nВремя сортировки: %.3f\n", totalTime);
+        }
+        else printf("Ошибка чтения файла.");
+
+        break;
+    }
+    case '3': {
+        int sizeArr;
+        printf("Введите размер желаемого массива:\n");
+        scanf("%d", &sizeArr);
+        createFile(sizeArr);
+
+        int* arrayNum = readFile(&sizeArr);
+        if (arrayNum != NULL) {
+            time_t startTime = clock();; // начальное время
+            shellSort(arrayNum, sizeArr); // сортировка массива
+            time_t endTime = clock();; // конечное время
+
+            outputFile(arrayNum, sizeArr);
+            printf("Сгенерированный массив случайных чисел сохранён в файл input.txt,\n а отсортированный вид данного массива сохранён в файл output.txt");
+
+            double totalTime = (double)(endTime - startTime) / CLOCKS_PER_SEC; // общее время сортировки
+            printf("\nВремя сортировки: %.3f\n", totalTime);
+        }
+        else printf("Ошибка чтения файла.");
+
+        break;
     }
 
-    fclose(file);// Р·Р°РєСЂС‹С‚РёРµ С„Р°Р№Р»Р°
-
-    return numbers;
+    default:
+        break;
+    }
 }
